@@ -1,25 +1,41 @@
 "use client";
 import { useState, useEffect } from "react";
-import getCompletion from "@/utils/helper";
 import Router from "next/router";
 import { use } from "react";
 
 export default function Input() {
-  const [prompt, setPrompt] = useState<string>("");
+  const [text, setText] = useState<string>("");
   const [age, setAge] = useState<number>(14);
   const [response, setResponse] = useState<string>("");
   const [status, setStatus] = useState<string>("inactive");
 
   const awaitCompletion = async () => {
     setStatus("loading");
-    const completion = await getCompletion(prompt, age);
-    setResponse(completion as string);
+    const prompt = `Summarize this for a ${age} year-old student:${text}`
+
+    const response = await fetch("/api/generate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        prompt
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(response.statusText);
+    }
+
+    let completion = await response.json();
+    console.log(completion)
+    setResponse(completion.choices[0].text);
     setStatus("active");
   };
 
   useEffect(() => {
-    console.log(response, prompt, age);
-  }, [response, prompt, age]);
+    console.log(response, text, age);
+  }, [response, text, age]);
 
   return (
     <>
@@ -28,9 +44,9 @@ export default function Input() {
           type="text"
           id="message"
           name="message"
-          placeholder="Type your input prompt here 😊"
+          placeholder="Type your input text here 😊"
           className="text-center w-4/5 mx-4 my-4 p-2 border-2 border-neutral-200 rounded-md focus:outline-none focus:border-neutral-500"
-          onChange={(e) => setPrompt(e.target.value)}
+          onChange={(e) => setText(e.target.value)}
         />
         <div className="w-4/5 mx-auto my-2 p-2">
           <input
