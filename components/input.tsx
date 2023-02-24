@@ -11,15 +11,20 @@ export default function Input() {
 
   const awaitCompletion = async () => {
     setStatus("loading");
-    const prompt = `Summarize this for a ${age} year-old student:${text}`
-
+    setResponse("");
+    const requiredLength =
+      Math.round(text.split(" ").length) > 64
+        ? Math.round(text.split(" ").length)
+        : 64;
+    console.log(requiredLength);
+    const prompt = `Summarize the text (in the style of a teacher teaching the topic) following the colon for a ${age} year-old person. If the person is below eighteen, treat them like a school student. If above 18, treat them like a univeristy student/adult. The summary should be at least ${requiredLength} words long and be a similar length to the input prompt:${text}`;
     const response = await fetch("/api/generate", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        prompt
+        prompt,
       }),
     });
 
@@ -28,14 +33,10 @@ export default function Input() {
     }
 
     let completion = await response.json();
-    console.log(completion)
     setResponse(completion.choices[0].text);
+    console.log(completion.choices[0].text.length)
     setStatus("active");
   };
-
-  useEffect(() => {
-    console.log(response, text, age);
-  }, [response, text, age]);
 
   return (
     <>
